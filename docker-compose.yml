@@ -1,0 +1,15 @@
+services:
+  backend:
+    build: ./backend
+    volumes:
+      - log_storage:/api/logs
+    ports:
+      - 8080:8080
+    networks:
+      - mltd
+
+volumes:
+  log_storage:
+
+networks:
+  mltd:
