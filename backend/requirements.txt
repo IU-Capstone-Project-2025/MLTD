@@ -1,3 +1,2 @@
-# torch
-# scikit-learn
+scikit-learn
 fastapi
