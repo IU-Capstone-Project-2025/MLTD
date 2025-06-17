@@ -1,24 +1,43 @@
 
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, status
 from fastapi.requests import *
 from fastapi.responses import *
 
 app = FastAPI()
 
-# NOTE: This function is temporary because it was created to satisfy the conditions for week one of the Capstone project.
-# It shall either be changed or removed during project development.
-@app.get("/", response_class=HTMLResponse)
-def temporary_root():
-    return """
-    <!DOCTYPE html>
-    <html>
-        <head>
-            <title>Temporary API response page</title>
-        </head>
-        <body>
-            <h1>IT WORKS?!??!?!</h1>
-            <br>
-            <p>If you are seeing this, then it means that the temporary app created for this week satisfies the conditions for week one. At least we hope it does... right?</p>
-        </body>
-    </html>
-    """
+@app.get("/")
+async def load_frontend():
+    return Response("The frontend interface is currently in development, and will be redirected to there once it has basic functionality", status.HTTP_501_NOT_IMPLEMENTED)
+
+@app.post("/upload")
+async def upload_log(file: UploadFile):
+    if not file.filename.endswith((".txt",".log")):
+        return Response("Invalid log file format", status_code=status.HTTP_406_NOT_ACCEPTABLE)
+
+    if file.size <= 0:
+        return Response("File is empty", status_code=status.HTTP_406_NOT_ACCEPTABLE)
+
+    with open(f"logs/{file.filename}", "wb") as f:
+        f.writelines(file.file.readlines())
+
+    return Response(status_code=status.HTTP_200_OK)
+
+@app.get("/health")
+async def get_health():
+    return Response(status_code=status.HTTP_200_OK)
+
+@app.get("/version")
+async def get_version():
+    return JSONResponse({"version": "0.1"}, status_code=status.HTTP_200_OK)
+
+@app.get("/detect/{file}")
+async def detect_threats(file: str):
+    return Response("Threat detection is not yet implemented", status_code=status.HTTP_501_NOT_IMPLEMENTED)
+
+@app.get("/results/{id}")
+async def get_result(result_id: int):
+    return Response("Result retrival is not yet implemented", status_code=status.HTTP_501_NOT_IMPLEMENTED)
+
+@app.get("/batch-detect")
+async def batch_detection():
+    return Response("Batch processing is not yet implemented", status_code=status.HTTP_501_NOT_IMPLEMENTED)
