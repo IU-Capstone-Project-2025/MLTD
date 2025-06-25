@@ -7,4 +7,8 @@
 logs/
 .DS_Store
 
+<<<<<<< HEAD
 backend/ML/log_data
+=======
+backend/ML/log_data/HDFS_v1/preprocessed
+>>>>>>> d3116d3 (Added missing files and excluded preprocessed data from commits)
