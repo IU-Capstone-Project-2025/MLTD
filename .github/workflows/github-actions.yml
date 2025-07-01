@@ -1,0 +1,26 @@
+name: MLTD CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3
+
+      - name: Build docker containers
+        run: docker compose build
+
+      - name: Run docker containers
+        run: docker compose up -d
+      
+      - name: Test backend API
+        run: tests/test1.sh
+        
+      - name: Test frontend
+        run: tests/test2.sh
+      
