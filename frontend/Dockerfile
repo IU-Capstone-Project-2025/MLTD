@@ -1,4 +1,4 @@
-FROM nodejs:latest
+FROM node:latest
 WORKDIR /app
 COPY . .
 CMD ["npx", "next", "dev"]

@@ -7,8 +7,8 @@ services:
       - 8080:8000
     networks:
       - mltd
-  fronted:
-    build: ./fronted
+  frontend:
+    build: ./frontend
     ports:
       - 3000:3000
     networks:
