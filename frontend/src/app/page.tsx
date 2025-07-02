@@ -5,7 +5,7 @@ import {toast} from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardAction } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { FileInputIcon, FileTextIcon, ScrollTextIcon, Trash2Icon, UploadCloudIcon } from "lucide-react";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 
@@ -115,7 +115,6 @@ async function uploadFile() {
 
 async function analyzeFile() {
   const file_input: HTMLInputElement | null = document.getElementById("file-input") as HTMLInputElement;
-  const results: HTMLDivElement | null = document.getElementById("results") as HTMLDivElement;
   const files: FileList | null = (file_input ? file_input.files : null);
 
   if (!files || files.length == 0) {
@@ -166,9 +165,5 @@ export default function Home() {
             <ControlButton onClick={analyzeFile}><ScrollTextIcon className="scale-150" />Analyze</ControlButton>
             <ControlButton onClick={clearFile}><Trash2Icon className="scale-150" />Clear</ControlButton>
           </div>
-
-          <div id="results" className="hidden">
-          </div>
-        </div>
-  );
+        </div>);
 }
