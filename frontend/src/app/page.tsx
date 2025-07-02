@@ -1,21 +1,101 @@
-'use client'
+'use client';
+
+import * as React from "react";
+import {toast} from "sonner";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardAction } from "@/components/ui/card";
+import { FileInputIcon, FileTextIcon, ScrollTextIcon, Trash2Icon, UploadCloudIcon } from "lucide-react";
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
+
+import { renderToString } from "react-dom/server";
+
+
+
+function ControlButton({...props}) {
+  return (<Button className=" bg-indigo-600 hover:bg-indigo-800 text-violet-400 hover:text-violet-500 text-center text-l rounded-m border-inherit hover:border-inherit border-6 scale-125" {...props}/>);
+}
+
+function FileBrowser() {
+  const file_icon: HTMLDivElement | null = document.getElementById("file-icon") as HTMLDivElement;
+  const file_label: HTMLParagraphElement | null = document.getElementById("file-label") as HTMLParagraphElement;
+  const file_input: HTMLInputElement | null = document.getElementById("file-input") as HTMLInputElement;
+
+  const showFileName = () => {
+    const files: FileList | null = (file_input ? file_input.files : null);
+
+    if (!files || files.length == 0) {
+      return;
+    }
+    const file: File | null = files[0] ? files[0] : null;
+    
+    if (!file) {
+      file_icon.innerHTML = renderToString(<FileInputIcon className="w-16 h-16" />);
+      file_label.innerText = "No file chosen.";
+      return;
+    }
+
+    file_icon.innerHTML = renderToString(<FileTextIcon className="w-16 h-16" />)
+    file_label.innerText = `${file.name}`;
+
+  };
+
+
+  return ( 
+    <div className="rounded items-center text-center" onChange={showFileName}>
+      <Label htmlFor="file-input" onChange={showFileName}>
+        <Card className="cursor-pointer items-center text-center w-screen bg-indigo-700 hover:bg-indigo-800 text-violet-400 hover:text-violet-500 border-inherit border-8">
+          <CardContent>
+            <div className="flex items-center justify-center" id="file-icon">
+              <FileInputIcon className="w-16 h-16" />
+            </div>
+            <p id="file-label" className="text-xl font-semibold">No file chosen.</p>
+          </CardContent>
+        </Card>
+      </Label>
+      <Input id="file-input" type="file" className="hidden" onChange={showFileName} accept=".txt, .log, .csv" />
+    </div>);
+}
+
+function clearFile() {
+  const file_icon: HTMLDivElement | null = document.getElementById("file-icon") as HTMLDivElement;
+  const file_label: HTMLParagraphElement | null = document.getElementById("file-label") as HTMLParagraphElement;
+  const file_input: HTMLInputElement | null = document.getElementById("file-input") as HTMLInputElement;
+  const files: FileList | null = (file_input ? file_input.files : null);
+
+  if (!files || files.length == 0) {
+    toast.warning("No files to remove.");
+    return;
+  }
+
+  file_icon.innerHTML = renderToString(<FileInputIcon className="w-16 h-16" />);
+  file_label.innerText = "No file chosen.";
+  file_input.value = "";
+
+  toast.info("Removed file(s)");
+}
 
 async function uploadFile() {
   const file_input: HTMLInputElement | null = document.getElementById("file-input") as HTMLInputElement;
-  const results: HTMLElement | null = document.getElementById("results");
-  const files: FileList | null = file_input.files;
-  const file: File | null = files[0] ? files[0] : null;
-  
-  if (!file) {
-    if (!results) {
-      alert("Please upload a file!");
-      return;
-    }
-    results.className = "bg-red-300 text-white";
-    results.innerHTML = "<h2>Please upload a file.</h2>";
+  const files: FileList | null = (file_input ? file_input.files : null);
+
+  if (!files || files.length == 0) {
+    toast.warning("Please upload a log file!");
     return;
   }
-  
+
+  const file: File = files[0];
+  if (!file || file.size == 0) {
+    toast.error("Malformed or empty file!");
+    return;
+  }
+
+  const file_name = files[0].name;
+  if (!file_name.endsWith(".txt") && !file_name.endsWith(".log") && !file_name.endsWith(".csv")) {
+    toast.warning("File name must end with .txt, .log, or .csv!");
+    return;
+  }
   
   const formdata = new FormData();
   formdata.append("file", file);
@@ -23,34 +103,23 @@ async function uploadFile() {
   const response = await fetch("http://localhost:8000/upload", {
     method: "POST",
     body: formdata
-  }
-  );
+  });
   
   if (response.ok) {
-    if (!results) {
-      alert("Successfully uploaded file(s).")
-      return;
-    }
-    results.className = "bg-green-300 text-white";
-    results.innerHTML = "<h2>Successfully uploaded file(s).</h2>";
-    return;
-  } else {
-    if (!results) {
-      return;
-    }
-    results.className = "bg-red-300 text-white";
-    results.innerHTML = `<h2>Failed to upload file(s).</h2>`;
+    toast.success(`Successfully uploaded "${file_name}".`);
     return;
   }
+
+  toast.error(`Failed to upload "${file_name}".`);
 }
 
 async function analyzeFile() {
   const file_input: HTMLInputElement | null = document.getElementById("file-input") as HTMLInputElement;
-  const results: HTMLElement | null = document.getElementById("results");
-  const files: FileList | null = file_input.files;
+  const results: HTMLDivElement | null = document.getElementById("results") as HTMLDivElement;
+  const files: FileList | null = (file_input ? file_input.files : null);
 
-  if (!files) {
-    alert("You must upload a file to detect threats.");
+  if (!files || files.length == 0) {
+    toast.warning("Please upload a file to analyze threats!")
     return;
   }
 
@@ -60,45 +129,46 @@ async function analyzeFile() {
   const json_data = await response.json();
   const probability = json_data.probability;
 
-  if (!probability) {
-    if (!results) {
-      alert("Results missing or malformed.");
-      return;
-    }
-    results.className = "bg-red-300 text-white";
-    results.innerHTML = "<h2>Results missing or malformed.</h2>";
+  if (!probability || probability < 0) {
+    toast.error("Missing or malformed results data.");
+    return;
+
+  }
+
+  if (probability < 0.5) {
+    toast.success(`No threats were found in "${file_name}"`);
     return;
   }
 
-  if (probability <= .6) {
-    if (!results) {
-      alert(`No threats were found in "${file_name}"`);
-      return;
-    }
-    results.className = "bg-yellow-300 text-white";
-    results.innerHTML = `<h2>There is a ${probability}% chance of (a) threat(s) in "${file_name}".</h2>`;
-  }
+  toast.warning(`${probability} percent chance of (a) threat(s) in "${file_name}"!`);
 }
 
 export default function Home() {
   return (
-
-        <div className="bg-indigo-400 text-cyan-300 font-semibold font-mono justify-between text-center space-y-10">
-          <div className="text-xl space-y-5">
+        <div className="text-center items-center font-semibold font-mono space-y-15">
+          <div className="text-violet-400 text-xl space-y-10">
               <h1 className="text-3xl font-bold">Welcome to MLTD!</h1>
               <p>Here you can upload log files (.txt, .log, and .csv) contating system or network activity, and have them sent to a threat detection API to find potential threats in your infrastructure.</p>
           </div>
           
-          <div id="file-table" className="flex items-center justify-center space-x-10 space-y-10">
-            <input type="file" id="file-input" className="flex bg-cyan-800 border-4 scale-125 text-3xl rounded-2xl" accept=".txt, .log, .csv"></input>
+
+          <div id="controls" className="text-violet-400 items-center space-x-20 space-y-5">
+              <ContextMenu>
+                <ContextMenuTrigger><FileBrowser /></ContextMenuTrigger>
+                <ContextMenuContent className="bg-indigo-600 text-violet-400 border-indigo-900 border-8 scale-175">
+                  <ContextMenuItem className="hover:bg-indigo-800 hover:text-violet-500" onClick={uploadFile}><UploadCloudIcon className="scale-150" />Upload</ContextMenuItem>
+                  <ContextMenuItem className="hover:bg-indigo-800 hover:text-violet-500" onClick={analyzeFile}><ScrollTextIcon className="scale-150" />Analyze</ContextMenuItem>
+                  <ContextMenuItem className="hover:bg-indigo-800 hover:text-violet-500" onClick={clearFile}><Trash2Icon className="scale-150" />Clear</ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
+            <br />
+            <ControlButton onClick={uploadFile}><UploadCloudIcon className="scale-150" />Upload</ControlButton>
+            <ControlButton onClick={analyzeFile}><ScrollTextIcon className="scale-150" />Analyze</ControlButton>
+            <ControlButton onClick={clearFile}><Trash2Icon className="scale-150" />Clear</ControlButton>
           </div>
 
-          <div id="controls" className="flex bg-inherit items-center justify-center text-center space-x-25">
-            <button onClick={uploadFile} className="text-2xl rounded-xl bg-cyan-600 hover:bg-cyan-800 text-cyan-500 hover:text-cyan-600">Upload</button>
-            <button onClick={analyzeFile} className="text-2xl rounded-xl bg-cyan-600 hover:bg-cyan-800 text-cyan-500 hover:text-cyan-600">Analyze</button>
+          <div id="results" className="hidden">
           </div>
-
-          <div id="results" className="rounded-md flex justify-center"></div>
         </div>
   );
 }
