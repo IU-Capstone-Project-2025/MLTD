@@ -39,9 +39,9 @@ def parse_line(line, for_train=False):
 def parse_file(filename, for_train=False):
     parsed_lines = []
     if for_train:
-        path = f"../log_data/BGL/{filename}"
+        path = f"ML/log_data/BGL/{filename}"
     else:
-        path = f"../../logs/{filename}"
+        path = f"logs/{filename}"
     with open(path, 'r') as f:
         for line in f:
             response = parse_line(line, for_train)
@@ -51,4 +51,4 @@ def parse_file(filename, for_train=False):
     if for_train:
         return df
     else:
-        df.to_csv(f"../../logs/{filename.split('.log')[0]}.csv")
+        df.to_csv(f"logs/{filename.split('.log')[0]}.csv")

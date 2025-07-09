@@ -109,5 +109,5 @@ predicted_labels = predictions.predictions.argmax(axis=1)
 
 print(classification_report(y_test_numeric, predicted_labels))
 
-model.save_pretrained("./saved_model")
-tokenizer.save_pretrained("./saved_model")
+model.save_pretrained("ML/BGL/saved_model")
+tokenizer.save_pretrained("ML?BGL/saved_model")

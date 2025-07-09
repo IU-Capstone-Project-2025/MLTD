@@ -3,6 +3,13 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# ML Models and data
+log_data/
+saved_models/
+*.npy
+*.pt
+*.safetensors
+
 # C extensions
 *.so
 

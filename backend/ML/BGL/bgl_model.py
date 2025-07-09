@@ -27,10 +27,10 @@ class TextDataset(Dataset):
 
 
 def analyze(filename):
-    tokenizer = BertTokenizer.from_pretrained("./saved_model")
-    model = BertForSequenceClassification.from_pretrained("./saved_model")
+    tokenizer = BertTokenizer.from_pretrained("ML/BGL/saved_model")
+    model = BertForSequenceClassification.from_pretrained("ML/BGL/saved_model")
 
-    df = pd.read_csv(f"../../logs/{filename}")
+    df = pd.read_csv(f"logs/{filename}")
     texts = df["message"].tolist()
 
     dataset = TextDataset(texts, tokenizer)
