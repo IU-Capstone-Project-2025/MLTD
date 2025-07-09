@@ -3,7 +3,7 @@ WORKDIR /api
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY . .
-CMD [ "fastapi", "main.py", "--host", "0.0.0.0" ]
+CMD [ "fastapi", "run", "main.py", "--host", "0.0.0.0" ]
 EXPOSE 8080
 
 
