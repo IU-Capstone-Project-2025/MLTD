@@ -4,8 +4,12 @@ from fastapi.requests import *
 from fastapi.responses import *
 from fastapi.middleware.cors import CORSMiddleware
 
-from ML.HDFS.hdfs_parser import parse_file
-from ML.HDFS.hdfs_model import analyze
+from ML.HDFS.hdfs_parser import parse_file as parse_hdfs
+from ML.HDFS.hdfs_model import analyze as analyze_hdfs
+from ML.BGL.bgl_parser import parse_file as parse_bgl
+from ML.BGL.bgl_model import analyze as analyze_bgl
+from ML.MAC.mac_parser import parse_file as parse_mac
+from ML.MAC.mac_model import analyze as analyze_mac
 
 app = FastAPI()
 
@@ -45,14 +49,30 @@ async def get_health():
 async def get_version():
     return JSONResponse({"version": "0.1"}, status_code=status.HTTP_200_OK)
 
-@app.get("/detect/{file}")
-async def detect_threats(file: str):
+@app.get("/analyze/{file}")
+async def detect_threats(file: str, format: str):
     if not os.path.isfile(f"logs/{file}"):
         return Response(f"'{file}' not found", status_code=status.HTTP_404_NOT_FOUND)
 
-    parse_file(file)
-    result = analyze(file.replace(".log", ".csv"), 29)
-    return JSONResponse({"probability": result}, status_code=status.HTTP_200_OK)
+    elif file is None:
+        return Response(f"'{file}' is empty", status_code=status.HTTP_400_BAD_REQUEST)
+
+    if format.upper() == "HDFS":
+        parse_hdfs(file)
+        result = analyze_hdfs(file.replace(".log", ".csv"),29)
+        return JSONResponse({"probability": result}, status_code=status.HTTP_200_OK)
+
+    elif format.upper() == "BGL":
+        parse_bgl(file)
+        result = analyze_bgl(file.replace(".log", ".csv"))
+        return JSONResponse({"probability": result}, status_code=status.HTTP_200_OK)
+
+    elif format.upper() == "MAC":
+        parse_mac(file)
+        result = analyze_mac(file.replace(".log", ".csv"))
+        return JSONResponse({"probability": result}, status_code=status.HTTP_200_OK)
+
+    return Response(f"\"{format}\" is not a supported log format", status_code=status.HTTP_400_BAD_REQUEST)
 
 @app.get("/results/{id}")
 async def get_result(result_id: int):
