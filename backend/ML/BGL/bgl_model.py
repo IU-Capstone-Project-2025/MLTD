@@ -1,3 +1,4 @@
+import torch
 import numpy as np
 import pandas as pd
 from torch.utils.data import Dataset
@@ -28,7 +29,7 @@ class TextDataset(Dataset):
 
 def analyze(filename):
     tokenizer = BertTokenizer.from_pretrained("ML/BGL/saved_model")
-    model = BertForSequenceClassification.from_pretrained("ML/BGL/saved_model")
+    model = BertForSequenceClassification.from_pretrained("ML/BGL/saved_model").to("cuda" if torch.cuda.is_available() else "cpu")
 
     df = pd.read_csv(f"logs/{filename}")
     texts = df["message"].tolist()
