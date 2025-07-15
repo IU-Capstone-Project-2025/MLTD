@@ -3,3 +3,5 @@ fastapi
 transformers[torch]
 torch
 pandas
+tqdm
+numpy
