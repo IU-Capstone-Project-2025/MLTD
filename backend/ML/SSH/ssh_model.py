@@ -7,13 +7,14 @@ import numpy as np
 
 
 def analyze(filename):
-    with open('ML/MAC/mac_model.pkl', 'rb') as file:
+    with open('ML/SSH/ssh_model.pkl', 'rb') as file:
         model_ = pickle.load(file)
     df = pd.read_csv(f"logs/{filename}")
     X = df["message"].tolist()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     torch.set_default_device(device)
+
     # This configures huggingface to not verify SSL
     # because of HTTPS errors when Paramon tried to test it on his Windows machine.
     from huggingface_hub import configure_http_backend
@@ -41,7 +42,7 @@ def analyze(filename):
     embeddings = np.array(embeddings)
 
     scores = model_.decision_function(embeddings)
-    threshold = 0  # predefined threshold (See 'mac_model_train.py')
+    threshold = 0  # predefined threshold (See 'ssh_model_train.py')
     anomalies = [log for log, pred in zip(X, scores) if pred <= threshold]
     total_lines = len(X)
     total_anomalies = len(anomalies)

@@ -28,8 +28,9 @@ class TextDataset(Dataset):
 
 
 def analyze(filename):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     tokenizer = BertTokenizer.from_pretrained("ML/BGL/saved_model")
-    model = BertForSequenceClassification.from_pretrained("ML/BGL/saved_model").to("cuda" if torch.cuda.is_available() else "cpu")
+    model = BertForSequenceClassification.from_pretrained("ML/BGL/saved_model").to(device)
 
     df = pd.read_csv(f"logs/{filename}")
     texts = df["message"].tolist()
@@ -56,5 +57,8 @@ def analyze(filename):
     predictions = trainer.predict(dataset)
 
     preds = np.argmax(predictions.predictions, axis=1)
-    print(1 - preds.sum() / len(preds))
-    return 1 - preds.sum() / len(preds)
+    total_lines = len(preds)
+    total_anomalies = int(len(preds) - preds.sum())
+    probability = 1 - preds.sum() / total_lines
+    print(probability)
+    return {"probability": probability, "total_anomalies": total_anomalies, "total_lines": total_lines}

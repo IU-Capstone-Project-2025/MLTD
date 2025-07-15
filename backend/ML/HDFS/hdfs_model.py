@@ -16,5 +16,8 @@ def analyze(filename, events_n):
 
     X = X.reindex(sorted(X.columns, key=lambda x: int(x[1:])), axis=1)
     pred = model.predict(X)
-    print(pred.sum() / len(pred))
-    return pred.sum() / len(pred)
+    total_lines = len(pred)
+    total_anomalies = int(pred.sum())
+    probability = total_anomalies / total_lines
+    print(probability)
+    return {"probability": probability, "total_lines": total_lines, "total_anomalies": total_anomalies}
