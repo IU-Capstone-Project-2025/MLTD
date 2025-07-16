@@ -164,21 +164,18 @@ function ResultNotifcation({file_name, log_format, probability, anomalies, lines
 }
 
 function clearFile() {
-  const results: HTMLDivElement | null = document.getElementById("results")as HTMLDivElement;
   const file_icon: HTMLDivElement | null = document.getElementById("file-icon") as HTMLDivElement;
   const file_input: HTMLInputElement | null = document.getElementById("file-input") as HTMLInputElement;
   const file_label: HTMLParagraphElement | null = document.getElementById("file-label") as HTMLParagraphElement;
   const files: FileList | null = (file_input ? file_input.files : null);
   
   if (!files || files.length == 0) {
-    results.innerHTML = renderToString(<WarningNotifcation>No files to remove!</WarningNotifcation>);
     return;
   }
 
   file_icon.innerHTML = renderToString(<FileInputIcon className="w-16 h-16" />);
   file_label.innerText = "No file chosen.";
   file_input.value = "";
-  results.innerHTML = renderToString(<SuccessNotification>Removed file</SuccessNotification>);
 }
 
 async function uploadFile() {
@@ -242,14 +239,22 @@ async function analyzeFile() {
   
   const response = await fetch(`http://localhost:8000/analyze/${file_name}?format=${log_format}`, {method: "GET"})
   if (!response.ok) {
-    if (response.status == 400) {
-      controls.className = "visible";
-      results.innerHTML = renderToString(<WarningNotifcation>{await response.text()}</WarningNotifcation>);
-      return;
-    }
+    if (response.status >= 400 || response.status < 500) {}
+    switch (response.status) {
+      case 400:
+        controls.className = "visible";
+        results.innerHTML = renderToString(<WarningNotifcation>{await response.text()}</WarningNotifcation>);
+        break;
 
-    controls.className = "visible";
-    results.innerHTML = renderToString(<FailureNotifcation>Failed to analyze &quot;{file_name}&quot;!</FailureNotifcation>);
+      case 404:
+        controls.className = "visible";
+        results.innerHTML = renderToString(<WarningNotifcation>Please upload &quot;{file_name}&quot; before analyzing it!</WarningNotifcation>);
+        break;
+
+      default:
+        controls.className = "visible";
+        results.innerHTML = renderToString(<FailureNotifcation>Failed to analyze &quot;{file_name}&quot;!</FailureNotifcation>);
+    }
     return;
   }
 
