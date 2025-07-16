@@ -21,6 +21,7 @@ cd MLTD
 ```
 
 Download the BGL Model:
+
 The model was too big to be stored on GitHub, so you will need to download the model [here](https://drive.google.com/file/d/1miVZN5arMReuDLH0e9Pjmd7SIeJEXdaM/view?usp=sharing). After it has finished downloading, extract the ZIP archive and move/copy the "saved_model" folder to "MLTD/backend/ML/BGL".
 
 #### Run MLTD in production mode with Docker Compose:
