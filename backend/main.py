@@ -46,7 +46,7 @@ async def upload_log(file: UploadFile):
     with open(f"logs/{file.filename}", "wb") as f:
         f.writelines(file.file.readlines())
 
-    return Response(status_code=status.HTTP_200_OK)
+    return Response(f"Successfully uploaded \"{file.filename}\"", status_code=status.HTTP_200_OK)
 
 @app.get("/version")
 async def get_version():

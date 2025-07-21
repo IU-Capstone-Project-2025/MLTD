@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRef } from "react";
 import { renderToString } from "react-dom/server";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,11 +12,13 @@ import { AlertTriangleIcon, CheckCircle2Icon, FileInputIcon, FileTextIcon, ListR
 
 const show_controls = () => {
     const controls: HTMLDivElement | null = document.getElementById("controls") as HTMLDivElement;
+    const upload_control: HTMLDivElement | null = document.getElementById("upload-control") as HTMLDivElement;
     const results: HTMLDivElement | null = document.getElementById("results") as HTMLDivElement;
     const reset_button: HTMLDivElement | null = document.getElementById("reset-button") as HTMLDivElement;
 
     reset_button.className = "invisible";
     controls.className = "visible";
+    upload_control.className = "visible";
     results.innerHTML = "";
   };
 
@@ -35,7 +38,7 @@ function FormatSelection() {
 }
 
 function FileBrowser() {
-  
+
   const showFileName = () => {
     const file_input: HTMLInputElement | null = document.getElementById("file-input") as HTMLInputElement;
     const file_icon: HTMLDivElement | null = document.getElementById("file-icon") as HTMLDivElement;
@@ -59,18 +62,18 @@ function FileBrowser() {
   };
 
   return ( 
-    <div className="cursor-pointer items-center text-center w-screen bg-indigo-700 hover:bg-indigo-800 text-violet-400 hover:text-violet-500 border-inherit border-8 rounded-md" onChange={showFileName}>
+    <div className="flex-row items-center justify-center w-175 cursor-pointer bg-indigo-700 hover:bg-indigo-800 text-violet-400 hover:text-violet-500 border-inherit border-8 rounded-md" onChange={showFileName}>
+      <Input id="file-input" type="file" className="hidden" onChange={showFileName} accept=".txt, .log, .csv" />
       <Label htmlFor="file-input" onChange={showFileName}>
-        <Card className="cursor-pointer items-center text-center w-screen text-inherit bg-inherit border-none rounded-md">
-          <CardContent>
+        <Card className="flex items-center justify-center min-w-full cursor-pointer text-inherit bg-inherit border-none">
+          <CardContent className="flex-row items-center justify-center text-center">
             <div className="flex items-center justify-center" id="file-icon">
               <FileInputIcon className="w-16 h-16" />
             </div>
-            <p id="file-label" className="text-xl font-semibold">No file chosen.</p>
+            <p id="file-label" className="text-2xl font-semibold">No file chosen.</p>
           </CardContent>
         </Card>
       </Label>
-      <Input id="file-input" type="file" className="hidden" onChange={showFileName} accept=".txt, .log, .csv" />
     </div>);
 }
 
@@ -163,26 +166,13 @@ function ResultNotifcation({file_name, log_format, probability, anomalies, lines
   </Card>);
 }
 
-function clearFile() {
-  const file_icon: HTMLDivElement | null = document.getElementById("file-icon") as HTMLDivElement;
-  const file_input: HTMLInputElement | null = document.getElementById("file-input") as HTMLInputElement;
-  const file_label: HTMLParagraphElement | null = document.getElementById("file-label") as HTMLParagraphElement;
-  const files: FileList | null = (file_input ? file_input.files : null);
-  
-  if (!files || files.length == 0) {
-    return;
-  }
-
-  file_icon.innerHTML = renderToString(<FileInputIcon className="w-16 h-16" />);
-  file_label.innerText = "No file chosen.";
-  file_input.value = "";
-}
-
 async function uploadFile() {
   const file_input: HTMLInputElement | null = document.getElementById("file-input") as HTMLInputElement;
   const results: HTMLDivElement | null = document.getElementById("results") as HTMLDivElement;
   const files: FileList | null = (file_input ? file_input.files : null);
-  
+  const upload_control: HTMLDivElement | null = document.getElementById("upload-control") as HTMLDivElement;
+  const analyze_control: HTMLDivElement | null = document.getElementById("analyze-control") as HTMLDivElement;
+
   if (!files || files.length == 0) {
     results.innerHTML = renderToString(<WarningNotifcation>Please select a log file from your system!</WarningNotifcation>);
     return;
@@ -208,6 +198,8 @@ async function uploadFile() {
 
   if (response.ok) {
     results.innerHTML = renderToString(<SuccessNotification>Successfully uploaded &quot;{file_name}&quot;</SuccessNotification>)
+    upload_control.className = "hidden";
+    analyze_control.className = "flex-row visible space-x-20";
     return;
   }
 
@@ -216,11 +208,13 @@ async function uploadFile() {
 
 async function analyzeFile() {
   const controls: HTMLDivElement | null = document.getElementById("controls") as HTMLDivElement;
+  const upload_control: HTMLDivElement | null = document.getElementById("upload-control") as HTMLDivElement;
+  const format_selector: HTMLSelectElement | null = document.getElementById("format-selector") as HTMLSelectElement;
+  const analyze_control: HTMLDivElement | null = document.getElementById("analyze-control") as HTMLDivElement;
+  const reset_button: HTMLDivElement | null = document.getElementById("reset-button") as HTMLDivElement;
   const file_input: HTMLInputElement | null = document.getElementById("file-input") as HTMLInputElement;
   const files: FileList | null = (file_input ? file_input.files : null);
-  const format_selector: HTMLSelectElement | null = document.getElementById("format-selector") as HTMLSelectElement;
   const results: HTMLDivElement | null = document.getElementById("results") as HTMLDivElement;
-  const reset_button: HTMLDivElement | null = document.getElementById("reset-button") as HTMLDivElement;
 
   if (!files || files.length == 0) {
     results.innerHTML = renderToString(<WarningNotifcation>Please upload a file to analyze threats!</WarningNotifcation>);
@@ -235,24 +229,30 @@ async function analyzeFile() {
   }
 
   controls.className = "invisible";
+  analyze_control.className = "invisible";
   results.innerHTML = renderToString(<ProgressNotifcation>Analyzing &quot;{file_name}&quot;</ProgressNotifcation>);
   
   const response = await fetch(`http://localhost:8000/analyze/${file_name}?format=${log_format}`, {method: "GET"})
   if (!response.ok) {
-    if (response.status >= 400 || response.status < 500) {}
     switch (response.status) {
       case 400:
         controls.className = "visible";
+        upload_control.className = "visible";
+        analyze_control.className = "hidden";
         results.innerHTML = renderToString(<WarningNotifcation>{await response.text()}</WarningNotifcation>);
         break;
 
       case 404:
         controls.className = "visible";
+        upload_control.className = "visible";
+        analyze_control.className = "hidden";
         results.innerHTML = renderToString(<WarningNotifcation>Please upload &quot;{file_name}&quot; before analyzing it!</WarningNotifcation>);
         break;
 
       default:
         controls.className = "visible";
+        upload_control.className = "visible";
+        analyze_control.className = "hidden";
         results.innerHTML = renderToString(<FailureNotifcation>Failed to analyze &quot;{file_name}&quot;!</FailureNotifcation>);
     }
     return;
@@ -270,7 +270,6 @@ async function analyzeFile() {
     results.innerHTML = renderToString(<FailureNotifcation>Missing or malformed result data.</FailureNotifcation>)
     return;
   }
-
   reset_button.className = "visible";
   results.innerHTML = renderToString(<SuccessNotification>Finished analyzing &quot;{file_name}&quot;</SuccessNotification>);
   results.innerHTML += renderToString(<ResultNotifcation file_name={file_name} log_format={log_format} probability={probability} anomalies={total_anomalies} lines={total_lines} />);
@@ -278,24 +277,33 @@ async function analyzeFile() {
 
 export default function Home() {
   return (
-        <div className="text-center items-center font-semibold font-mono space-y-10">
+        <div className="flex-col text-center items-center font-semibold font-mono space-y-10">
           <div className="text-violet-400 text-xl space-y-10">
               <h1 className="text-3xl font-bold">Welcome to MLTD!</h1>
               <p>Upload log files (.txt, .log, and .csv) that contain system or network activity, and have them sent to a threat detection API to find potential threats in your infrastructure.</p>
           </div>
 
-          <div id="controls" className="text-violet-400 items-center justify-center">
-            <FileBrowser />
+          <div id="controls" className="flex-row items-center justify-center text-violet-400">
+            <div className="flex items-center justify-center">
+              <FileBrowser />
+            </div>
+
             <br />
-            <div className="items-center justify-center space-x-20">
-              <ControlButton onClick={uploadFile}><UploadCloudIcon className="scale-150" />Upload</ControlButton>
-              <ControlButton onClick={analyzeFile}><ScrollTextIcon className="scale-150" />Analyze</ControlButton>
-              <ControlButton onClick={clearFile}><Trash2Icon className="scale-150" />Clear</ControlButton>
-              <FormatSelection />
+            <div className="flex-col items-center justify-center">
+              <div id="upload-control" className="flex-row items-center justify-center">
+                <ControlButton onClick={uploadFile}><UploadCloudIcon className="scale-150" />Upload</ControlButton>
+              </div>
+              
+              <div id="analyze-control" className="flex-row hidden items-center justify-center space-x-20">
+                <FormatSelection />
+                <ControlButton onClick={analyzeFile}><ScrollTextIcon className="scale-150" />Analyze</ControlButton>
+              </div>
             </div>
           </div>
-          <div id="results" className="flex flex-col text-center items-center justify-center space-x-10 space-y-10">
+
+          <div id="results" className="flex flex-col text-center items-center justify-center space-y-20">
           </div>
+
           <div id="reset-button" className="flex items-center justify-center space-y-20 invisible">
             <ControlButton onClick={show_controls}><ListRestartIcon /> Start a new scan</ControlButton>
           </div>
