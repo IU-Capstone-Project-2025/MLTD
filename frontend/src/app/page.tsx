@@ -1,14 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { useRef } from "react";
 import { renderToString } from "react-dom/server";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
-import { AlertTriangleIcon, CheckCircle2Icon, FileInputIcon, FileTextIcon, ListRestartIcon, ScrollTextIcon, Trash2Icon, UploadCloudIcon } from "lucide-react";
+import { AlertTriangleIcon, CheckCircle2Icon, FileInputIcon, FileTextIcon, ListRestartIcon, ScrollTextIcon, UploadCloudIcon } from "lucide-react";
 
 const show_controls = () => {
     const controls: HTMLDivElement | null = document.getElementById("controls") as HTMLDivElement;
@@ -139,7 +138,7 @@ function DotSpinner({ size = 48, dotCount = 8, dotSize = 10, color = "bg-indigo-
 }
 
 function ProgressNotifcation({...props}) {
-  return (<Alert className="flex bg-indigo-700 text-violet-500 text-xl w-fit items-center justify-center space-x-5 scale-150">
+  return (<Alert className="flex bg-indigo-700 text-violet-400 text-xl w-fit items-center justify-center space-x-5 scale-150">
     <DotSpinner />
     <AlertTitle {...props} />
   </Alert>);
