@@ -18,6 +18,7 @@ const show_controls = () => {
     reset_button.className = "invisible";
     controls.className = "visible";
     upload_control.className = "visible";
+
     results.innerHTML = "";
   };
 
@@ -153,10 +154,10 @@ function ResultNotifcation({file_name, log_format, probability, anomalies, lines
     background_color = "bg-yellow-700";
   }
 
-  return (<Card className={`items-center text-center w-screen ${background_color} text-white border-inherit border-8 rounded-md`}>
+  return (<Card className={`items-center text-center w-200 ${background_color} text-white border-inherit border-8 rounded-md`}>
     <CardTitle className="text-4xl font-bold">Results</CardTitle>
     <CardDescription className="text-3xl font-semibold text-inherit">
-      <p>Filename: {file_name}</p>
+      <p>File name: {file_name}</p>
       <p>Log format: {log_format}</p>
       <p>Number of lines: {lines}</p>
       <p>Anomalies found: {anomalies}</p>
@@ -238,6 +239,7 @@ async function analyzeFile() {
         controls.className = "visible";
         upload_control.className = "visible";
         analyze_control.className = "hidden";
+        format_selector.value = "";
         results.innerHTML = renderToString(<WarningNotifcation>{await response.text()}</WarningNotifcation>);
         break;
 
@@ -245,6 +247,7 @@ async function analyzeFile() {
         controls.className = "visible";
         upload_control.className = "visible";
         analyze_control.className = "hidden";
+        format_selector.value = "";
         results.innerHTML = renderToString(<WarningNotifcation>Please upload &quot;{file_name}&quot; before analyzing it!</WarningNotifcation>);
         break;
 
@@ -252,6 +255,7 @@ async function analyzeFile() {
         controls.className = "visible";
         upload_control.className = "visible";
         analyze_control.className = "hidden";
+        format_selector.value = "";
         results.innerHTML = renderToString(<FailureNotifcation>Failed to analyze &quot;{file_name}&quot;!</FailureNotifcation>);
     }
     return;
@@ -266,9 +270,13 @@ async function analyzeFile() {
     || !total_anomalies || total_anomalies < 0
     || !total_lines || total_lines < 0) {
     controls.className = "visible";
+        upload_control.className = "visible";
+        analyze_control.className = "hidden";
+        format_selector.value = "";
     results.innerHTML = renderToString(<FailureNotifcation>Missing or malformed result data.</FailureNotifcation>)
     return;
   }
+  format_selector.value = "";
   reset_button.className = "visible";
   results.innerHTML = renderToString(<SuccessNotification>Finished analyzing &quot;{file_name}&quot;</SuccessNotification>);
   results.innerHTML += renderToString(<ResultNotifcation file_name={file_name} log_format={log_format} probability={probability} anomalies={total_anomalies} lines={total_lines} />);
