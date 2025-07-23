@@ -44,8 +44,14 @@ def parse_file(filename):
     parsed_lines = []
 
     with open(f"logs/{filename}", 'r') as f:
-        for line in f:
-            parsed_lines.append(parse_line(line.strip(), events))
+        for line in f.readlines():
+            try:
+                parsed_lines.append(parse_line(line.strip(), events))
+            except:
+                return False
 
     df = pd.DataFrame(parsed_lines).dropna()
+    if df.empty:
+        return False
     df.to_csv(f"logs/{filename.split('.log')[0]}.csv")
+    return True

@@ -12,13 +12,13 @@ def check_lines(line):
 
 def parse_line(line):
     tokens = line.split()
-    message = " ".join(tokens[5:]).strip()
+    message = " ".join(tokens[6:] if tokens[0].isdigit() else tokens[5:]).strip()
     i = 4  # the magic number for finding the process name and its identifier
     s = ""
     process = None
     while i != len(tokens):
         s += tokens[i]
-        match = re.match(r'^(.*?)\[(\d+)\]', s)
+        match = re.match(r'^(.*?)\[?(\d+)\]?', s)
         i += 1
         if match:
             process = match.group(1)
@@ -42,29 +42,41 @@ def parse_file(filename, for_train=False):
     parsed_lines = []
 
     if for_train:
-        path = f"log_data/MAC/{filename}"
+        path = f"ML/log_data/MAC/{filename}"
     else:
         path = f"logs/{filename}"
 
     with open(path, 'r') as f:
-        for line in f.readlines():
-            response = check_lines(line.strip())
-            if response:
-                lines.append(line.strip())
-            else:
-                # This fixes an IndexOutOfRangeException error when tests were done by Paramon.
-                if len(lines) != 0:
-                    lines[-1] += line.strip()
-        for line in lines:
-            response = parse_line(line)
-            if response:
-                parsed_lines.append(response)
-    df = pd.DataFrame(parsed_lines)
+        for i, line in enumerate(f.readlines()):
+            if filename.endswith(".csv"):
+                if i == 0:
+                    continue
+                line = " ".join(line.split(",")[2:])
+            line = line.strip()
 
+            response = check_lines(line)
+            if response:
+                lines.append(line)
+            else:
+                return False
+
+        if len(lines) == 0:
+            return False
+
+        for line in lines:
+            try:
+                response = parse_line(line)
+                if response:
+                    if response["process"] == 'sshd':
+                        return False
+                    parsed_lines.append(response)
+            except:
+                return False
+    df = pd.DataFrame(parsed_lines)
+    if df.empty:
+        return False
     if for_train:
         return df
     else:
-        df.to_csv("Mac.csv")
-
-if __name__ == "__main__":
-    parse_file("mac_template.csv")
+        df.to_csv(f"logs/{filename.split('.log')[0]}.csv")
+        return True
