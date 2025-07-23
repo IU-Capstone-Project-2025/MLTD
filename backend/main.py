@@ -1,6 +1,6 @@
 import os
-import traceback
 
+import uvicorn
 from fastapi import FastAPI, UploadFile, status
 from fastapi.requests import *
 from fastapi.responses import *
@@ -62,24 +62,31 @@ async def detect_threats(file: str, format: str):
 
     match (format.upper()):
         case "BGL":
-            parse_bgl(file)
+            if not parse_bgl(file):
+                return Response(f"\"{file}\" is not a valid BGL log file.", status_code=status.HTTP_400_BAD_REQUEST)
             result = analyze_bgl(file.replace(".log", ".csv"))
             return JSONResponse(result, status_code=status.HTTP_200_OK)
 
         case "HDFS":
-            parse_hdfs(file)
+            if not parse_hdfs(file):
+                return Response(f"\"{file}\" is not a valid HDFS log file.", status_code=status.HTTP_400_BAD_REQUEST)
             result = analyze_hdfs(file.replace(".log", ".csv"), 29)
             return JSONResponse(result, status_code=status.HTTP_200_OK)
 
         case "MAC":
-            parse_mac(file)
+            if not parse_mac(file):
+                return Response(f"\"{file}\" is not a valid MAC log file.", status_code=status.HTTP_400_BAD_REQUEST)
             result = analyze_mac(file.replace(".log", ".csv"))
             return JSONResponse(result, status_code=status.HTTP_200_OK)
 
         case "SSH":
-            parse_ssh(file)
+            if not parse_ssh(file):
+                return Response(f"\"{file}\" is not a valid SSH log file.", status_code=status.HTTP_400_BAD_REQUEST)
             result = analyze_ssh(file.replace(".log", ".csv"))
             return JSONResponse(result, status_code=status.HTTP_200_OK)
 
         case _:
             return Response(f"\"{format}\" is not a supported log format", status_code=status.HTTP_400_BAD_REQUEST)
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
